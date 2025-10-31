@@ -1,6 +1,108 @@
 <!doctype html>
 <html lang="de">
-<meta charset="utf-8">
-<title>Test</title>
-<body>Hello World</body>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width,initial-scale=1" />
+	<title>Tims Socken Countdown</title>
+	<div id="snow"></div>
+	<div>
+		<img src="./socks.png" alt="Gehäkelte Socken" class="hero" loading="lazy" decoding="async">
+		<div id="count" class="count">--d --h --m --s</div>
+		<div class="t">Bis du meine Socken fertig gehäkelt hast:</div>
+		<div class="t" style="margin-top: 25px">Frohe Weihnachten! 🎄</div>
+	</div>
 </html>
+
+<script>
+(() => {
+	const el = document.getElementById('count'), pad=n=>String(n).padStart(2,'0');
+	let y=new Date().getFullYear();
+	let target=new Date(`${y}-12-24T18:00:00+01:00`);
+	if (new Date() > target) target=new Date(`${y+1}-12-24T18:00:00+01:00`);
+	function tick(){
+		const d=target-new Date(); if(d<=0){ el.textContent='Frohe Weihnachten!'; clearInterval(t); return; }
+		const s=Math.floor(d/1000), dd=Math.floor(s/86400),
+			h=Math.floor((s%86400)/3600), m=Math.floor((s%3600)/60), sec=s%60;
+		el.textContent = `${dd}d ${pad(h)}h ${pad(m)}m ${pad(sec)}s`;
+	}
+	tick(); const t=setInterval(tick,1000);
+})();
+
+(() => {
+	const snow = document.getElementById('snow');
+	const N = 120;
+	for (let i = 0; i < N; i++) {
+		const f = document.createElement('i');
+		f.className = 'flake';
+		f.style.setProperty('--x', (Math.random() * 100).toFixed(2));
+		f.style.setProperty('--drift', (Math.random() * 2 - 1).toFixed(2));
+		f.style.setProperty('--s', (Math.random() * 4 + 2).toFixed(1) + 'px');
+		f.style.setProperty('--dur', (Math.random() * 8 + 6).toFixed(1));
+		f.style.setProperty('--delay', (Math.random() * 10).toFixed(1));
+		snow.appendChild(f);
+	}
+})();
+</script>
+
+<style>
+	html,body{
+		height: 90%;
+		margin: 0;
+	}
+	
+	body > div { position: relative; z-index: 1; }
+	
+	#snow{
+		position: fixed; inset: 0;
+		pointer-events: none; overflow: hidden;
+		z-index: 0;
+	}
+	
+	.flake{
+		position: absolute; top: -10vh;
+		width: var(--s); height: var(--s);
+		border-radius: 50%;
+		background: radial-gradient(#fff 0 60%, transparent 61%);
+		filter: drop-shadow(0 0 6px rgba(255,255,255,.6));
+		opacity: .9;
+		left: calc(var(--x) * 1vw);
+		animation: fall linear infinite;
+		animation-duration: calc(var(--dur) * 1s);
+		animation-delay: calc(var(--delay) * 1s);
+	}
+
+	@keyframes fall {
+		to {
+			transform: translateY(110vh) translateX(calc(var(--drift) * 1vw)) rotate(360deg);
+			opacity: .95;
+		}
+	}
+	
+	body{
+		background: #000;
+		color: #fff;
+		display: grid;
+		place-items: center;
+		text-align: center;
+		font: 600 2rem/1.2 system-ui,sans-serif;
+	}
+  
+	.t{
+		opacity: .85;
+		font-weight: 400;
+		font-size: clamp(1rem,2.5vw,1.5rem);
+	}
+	
+	.count{
+		font: 700 clamp(2rem,6vw,6rem) ui-monospace,monospace
+	}
+
+	.hero{
+		display: block;
+		margin: 1rem auto 0;
+		margin-bottom: 20px;
+		max-width: min(300px,60vw);
+		height: auto;
+		border-radius: 20px;
+		box-shadow: 0 6px 20px rgba(0,0,0,.35);
+	}
+</style>
