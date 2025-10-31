@@ -3,7 +3,7 @@
 	<meta charset="utf-8" />
 	<meta name="viewport" content="width=device-width,initial-scale=1" />
 	<title>Tims Socken Countdown</title>
-	<div id="snow"></div>
+	<canvas id="snow" aria-hidden="true"></canvas>
 	<div>
 		<img src="./socks.png" alt="Gehäkelte Socken" class="hero" loading="lazy" decoding="async">
 		<div id="count" class="count">--d --h --m --s</div>
@@ -28,18 +28,59 @@
 })();
 
 (() => {
-	const snow = document.getElementById('snow');
-	const N = 120;
-	for (let i = 0; i < N; i++) {
-		const f = document.createElement('i');
-		f.className = 'flake';
-		f.style.setProperty('--x', (Math.random() * 100).toFixed(2));
-		f.style.setProperty('--drift', (Math.random() * 2 - 1).toFixed(2));
-		f.style.setProperty('--s', (Math.random() * 4 + 2).toFixed(1) + 'px');
-		f.style.setProperty('--dur', (Math.random() * 8 + 6).toFixed(1));
-		f.style.setProperty('--delay', (Math.random() * 10).toFixed(1));
-		snow.appendChild(f);
+	const c = document.getElementById('snow');
+	const ctx = c.getContext('2d');
+	const DPR = Math.min(window.devicePixelRatio || 1, 2);
+	let W, H, flakes = [];
+
+	function resize() {
+		W = innerWidth;
+		H = innerHeight;
+		c.width  = W * DPR;
+		c.height = H * DPR;
+		c.style.width  = W + 'px';
+		c.style.height = H + 'px';
+		ctx.scale(DPR, DPR);
 	}
+	addEventListener('resize', resize, { passive: true });
+	resize();
+
+	const N = innerWidth < 420 ? 60 : 120;
+
+	function resetFlake(f) {
+		f.x = Math.random() * W;
+		f.y = -10;
+		f.r = Math.random() * 2 + 1;
+		f.vy = Math.random() * 0.8 + 0.4; // Geschwindigkeit Y
+		f.vx = Math.random() * 0.6 - 0.3; // leichtes seitliches Driften
+		f.alpha = Math.random() * 0.5 + 0.5;
+	}
+
+	flakes = Array.from({ length: N }, () => {
+		const f = {};
+		resetFlake(f);
+		f.y = Math.random() * H; // verteilt starten
+		return f;
+	});
+
+	function tick() {
+		ctx.clearRect(0, 0, W, H);
+		ctx.fillStyle = "#fff";
+		for (const f of flakes) {
+			f.x += f.vx;
+			f.y += f.vy;
+			if (f.y > H + 5 || f.x < -5 || f.x > W + 5) resetFlake(f);
+			ctx.globalAlpha = f.alpha;
+			ctx.beginPath();
+			ctx.arc(f.x, f.y, f.r, 0, Math.PI * 2);
+			ctx.fill();
+		}
+		ctx.globalAlpha = 1;
+		requestAnimationFrame(tick);
+	}
+
+	const m = matchMedia("(prefers-reduced-motion: reduce)");
+	if (!m.matches) requestAnimationFrame(tick);
 })();
 </script>
 
@@ -50,31 +91,12 @@
 	}
 	
 	body > div { position: relative; z-index: 1; }
-	
-	#snow{
-		position: fixed; inset: 0;
-		pointer-events: none; overflow: hidden;
-		z-index: 0;
-	}
-	
-	.flake{
-		position: absolute; top: -10vh;
-		width: var(--s); height: var(--s);
-		border-radius: 50%;
-		background: radial-gradient(#fff 0 60%, transparent 61%);
-		filter: drop-shadow(0 0 6px rgba(255,255,255,.6));
-		opacity: .9;
-		left: calc(var(--x) * 1vw);
-		animation: fall linear infinite;
-		animation-duration: calc(var(--dur) * 1s);
-		animation-delay: calc(var(--delay) * 1s);
-	}
 
-	@keyframes fall {
-		to {
-			transform: translateY(110vh) translateX(calc(var(--drift) * 1vw)) rotate(360deg);
-			opacity: .95;
-		}
+
+	#snow{
+	  position: fixed; inset: 0;
+	  pointer-events: none;
+	  z-index: 0;
 	}
 	
 	body{
